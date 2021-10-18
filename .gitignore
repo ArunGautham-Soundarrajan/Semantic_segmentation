@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# large files
+CLUBS_dataset_sample_data_small
+archive
+deeplab_model.pth
