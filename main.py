@@ -14,7 +14,8 @@ from customDataset import CustomDataset
 from deepLabModel import DeepLabModel, LrASPPModel
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from evaluation_metrics import meanIOU, pixelAcc
+from evaluation_metrics import meanIOU, pixelAcc, count_parameters
+import timeit
 
 
 def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
@@ -26,6 +27,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
     pixelacctrain = []
     meanioutest = []
     pixelacctest = []
+    mean_train_time = []
         
     for epoch in range(EPOCHS):
         
@@ -45,6 +47,9 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
             img = img.to(device = DEVICE)
             mask = mask.to(device = DEVICE)
             
+            #start the timer
+            start = timeit.default_timer()
+            
             #forward pass
             y_pred = model(img)
             loss = criterion(y_pred, mask)
@@ -54,15 +59,21 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
             loss.backward()
             optimizer.step()
             
+            #stop the timer
+            stop = timeit.default_timer()
+            train_time = stop - start
+            
             #evalutaion metrics
             meanioutrain.append(meanIOU(mask, y_pred))
             pixelacctrain.append(pixelAcc(mask, y_pred))
-                                    
+            mean_train_time.append(train_time) 
+                       
             #display the loss
-            loop.set_postfix({'Epoch ': epoch+1  ,
-                              'Loss ': loss.item(),
-                              'Mean IOU ': np.mean(meanioutrain),
-                              'Pixel Acc :': np.mean(pixelacctrain)
+            loop.set_postfix({'Epoch': epoch+1  ,
+                              'Loss': loss.item(),
+                              'Mean IOU': np.mean(meanioutrain),
+                              'Pixel Acc': np.mean(pixelacctrain),
+                              'Train time image': np.mean(mean_train_time)
                               })
               
         #append the loss    
@@ -153,6 +164,10 @@ if __name__ == "__main__":
     
     #optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr = LR)
+    
+    
+    #number of parameters
+    print('Number of trainable parameters :',count_parameters(model))
     
     #train
     trained_model, train_loss, val_loss = train(model, train_loader, test_loader,
