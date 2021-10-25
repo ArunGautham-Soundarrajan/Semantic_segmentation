@@ -15,12 +15,11 @@ from PIL import Image
 
 class CustomDataset(Dataset):
     
-    def __init__(self, img_path, mask_path, transform = None):
+    def __init__(self, img_dir, transform = None):
         
-        self.img_path = img_path
-        self.mask_path = mask_path
-        self.imgs = list(sorted(os.listdir(self.img_path)))
-        self.masks = list(sorted(os.listdir(self.mask_path)))
+        self.img_dir = img_dir
+        self.imgs = list(sorted(os.listdir(self.img_dir +'\\images')))
+        self.masks = list(sorted(os.listdir(self.img_dir + '\\masks')))
         self.transform = transform
     
     def __len__(self):
@@ -29,8 +28,11 @@ class CustomDataset(Dataset):
     
     def __getitem__(self, index):
         
-        img = Image.open(self.img_path + self.imgs[index]).convert("RGB")
-        mask = Image.open(self.mask_path + self.masks[index])
+        image = os.path.join(self.img_dir, 'images', self.imgs[index])
+        mask_path = os.path.join(self.img_dir, 'masks', self.masks[index])
+        
+        img = Image.open(image).convert("RGB")
+        mask = Image.open(mask_path)
         mask = mask.convert('L')
         
         if self.transform is not None:

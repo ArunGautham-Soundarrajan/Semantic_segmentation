@@ -132,4 +132,5 @@ dmypy.json
 # large files
 CLUBS_dataset_sample_data_small
 archive
+data
 deeplab_model.pth

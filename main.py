@@ -115,10 +115,10 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
 if __name__ == "__main__":
 
     #Data directory
-    img_dir = 'archive/TrayDataset/XTrain/'
-    mask_dir = 'archive/TrayDataset/yTrain/'
+    img_dir = 'data'
+    #mask_dir = 'archive/TrayDataset/yTrain/'
     val_img_dir = 'archive/TrayDataset/XTest/'
-    val_mask_dir = 'archive/TrayDataset/yTest/'
+    #val_mask_dir = 'archive/TrayDataset/yTest/'
     
     #Trainging Params
     BATCH_SIZE = 16
@@ -139,12 +139,10 @@ if __name__ == "__main__":
             ])
     
     #Dataset
-    train_dataset = CustomDataset(img_path = img_dir, 
-                                  mask_path = mask_dir,
+    train_dataset = CustomDataset(img_path = img_dir,
                                   transform=transform)
     
-    val_dataset = CustomDataset(img_path = val_img_dir, 
-                                mask_path = val_mask_dir,
+    val_dataset = CustomDataset(img_path = val_img_dir,
                                 transform=transform)
     
     #DataLoader
