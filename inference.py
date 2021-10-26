@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 
 def inference(img_path, model_path):
     
-    
     #load the image and transform it
     img = Image.open(img_path).convert("RGB")
     transform = T.Compose([
@@ -25,7 +24,6 @@ def inference(img_path, model_path):
     #load the trained model
     model = DeepLabModel(43)
     model.load_state_dict(torch.load(model_path))
-    
     
     with torch.no_grad():
         model.eval()

@@ -6,12 +6,12 @@ Created on Fri Oct  8 16:49:29 2021
 """
 
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 import torch.nn as nn
 import torchvision.transforms as T
 import numpy as np
 from customDataset import CustomDataset
-from deepLabModel import DeepLabModel, LrASPPModel
+from models import DeepLabModel, LrASPPModel
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
@@ -116,9 +116,6 @@ if __name__ == "__main__":
 
     #Data directory
     img_dir = 'data'
-    #mask_dir = 'archive/TrayDataset/yTrain/'
-    val_img_dir = 'archive/TrayDataset/XTest/'
-    #val_mask_dir = 'archive/TrayDataset/yTest/'
     
     #Trainging Params
     BATCH_SIZE = 16
@@ -139,18 +136,19 @@ if __name__ == "__main__":
             ])
     
     #Dataset
-    train_dataset = CustomDataset(img_path = img_dir,
-                                  transform=transform)
+    dataset = CustomDataset(img_path = img_dir,
+                            transform=transform)
     
-    val_dataset = CustomDataset(img_path = val_img_dir,
-                                transform=transform)
+    #train test split
+    train_dataset , test_dataset = random_split(dataset,(80,20))
     
+        
     #DataLoader
     train_loader = DataLoader(dataset = train_dataset, 
                               batch_size= BATCH_SIZE, 
                               shuffle = True)
     
-    test_loader = DataLoader(dataset = val_dataset,
+    test_loader = DataLoader(dataset = test_dataset,
                              batch_size= BATCH_SIZE)
     
     #Model
