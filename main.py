@@ -11,7 +11,7 @@ import torch.nn as nn
 import torchvision.transforms as T
 import numpy as np
 from customDataset import CustomDataset
-from models import DeepLabModel, LrASPPModel
+from models import DeepLabModel, LrASPPModel, get_Unet
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
@@ -115,7 +115,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
 if __name__ == "__main__":
 
     #Data directory
-    img_dir = 'data'
+    img_dir = 'Data_OCID'
     
     #Trainging Params
     BATCH_SIZE = 16
@@ -136,11 +136,11 @@ if __name__ == "__main__":
             ])
     
     #Dataset
-    dataset = CustomDataset(img_path = img_dir,
+    dataset = CustomDataset(img_dir = img_dir,
                             transform=transform)
     
     #train test split
-    train_dataset , test_dataset = random_split(dataset,(80,20))
+    train_dataset , test_dataset = random_split(dataset,(500,74))
     
         
     #DataLoader
@@ -152,8 +152,9 @@ if __name__ == "__main__":
                              batch_size= BATCH_SIZE)
     
     #Model
-    #model = DeepLabModel(num_classes=43).to(device=DEVICE)
-    model = LrASPPModel(num_classes=43).to(device=DEVICE)
+    #model = DeepLabModel(num_classes=23).to(device=DEVICE)
+    #model = LrASPPModel(num_classes=23).to(device=DEVICE)
+    model = get_Unet(num_classes=23).to(device=DEVICE)
     
     #loss function
     criterion = nn.CrossEntropyLoss()
@@ -163,7 +164,7 @@ if __name__ == "__main__":
     
     
     #number of parameters
-    print('Number of trainable parameters :',count_parameters(model))
+    print('Number of trainable parameters :', count_parameters(model))
     
     #train
     trained_model, train_loss, val_loss = train(model, train_loader, test_loader,

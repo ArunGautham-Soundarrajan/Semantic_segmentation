@@ -19,7 +19,7 @@ class CustomDataset(Dataset):
         
         self.img_dir = img_dir
         self.imgs = list(sorted(os.listdir(self.img_dir +'\\images')))
-        self.masks = list(sorted(os.listdir(self.img_dir + '\\masks')))
+        self.masks = list(sorted(os.listdir(self.img_dir + '\\labels')))
         self.transform = transform
     
     def __len__(self):
@@ -29,7 +29,7 @@ class CustomDataset(Dataset):
     def __getitem__(self, index):
         
         image = os.path.join(self.img_dir, 'images', self.imgs[index])
-        mask_path = os.path.join(self.img_dir, 'masks', self.masks[index])
+        mask_path = os.path.join(self.img_dir, 'labels', self.masks[index])
         
         img = Image.open(image).convert("RGB")
         mask = Image.open(mask_path)
@@ -47,6 +47,11 @@ class CustomDataset(Dataset):
                
         return  img, mask
 
+transform = T.Compose([
+            T.Resize((128, 128)),
+            ])
+dataset = CustomDataset(img_dir = 'Data_OCID',
+                        transform=transform)
 
 #the dimensions of the image are (480,640, 3)
 #the dimensions of the mask are (480,640)

@@ -47,7 +47,7 @@ from torchmetrics import IoU
 # =============================================================================
 
 
-def meanIOU(label, pred, num_classes = 43):
+def meanIOU(label, pred, num_classes = 23):
     
     with torch.no_grad():
         

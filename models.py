@@ -9,6 +9,8 @@ import torch.nn as nn
 import torchvision
 from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 from torchvision.models.segmentation.lraspp import LRASPPHead
+import segmentation_models_pytorch as smp
+
 
 class DeepLabModel(nn.Module):
     
@@ -33,7 +35,7 @@ class LrASPPModel(nn.Module):
         super(LrASPPModel, self).__init__()
         self.num_classes = num_classes
         self.model = torchvision.models.segmentation.lraspp_mobilenet_v3_large(pretrained=False
-                                                                              , num_classes=43
+                                                                              , num_classes=self.num_classes
                                                                                )
         
         #self.model.classifier = LRASPPHead(64, 64,self.num_classes, 64)
@@ -43,3 +45,11 @@ class LrASPPModel(nn.Module):
         y = self.model(x)['out']
     
         return y
+    
+def get_Unet(num_classes):
+    model =  smp.Unet(
+                 encoder_name='resnet34',
+                 encoder_weights='imagenet',
+                 in_channels=3,
+                 classes=num_classes)
+    return model
