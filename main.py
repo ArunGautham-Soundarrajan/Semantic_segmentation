@@ -119,7 +119,7 @@ if __name__ == "__main__":
     
     #Trainging Params
     BATCH_SIZE = 16
-    EPOCHS = 5
+    EPOCHS = 20
     IMG_SIZE = 128
     SEED = 24
     LR = 1e-3
@@ -140,7 +140,7 @@ if __name__ == "__main__":
                             transform=transform)
     
     #train test split
-    train_dataset , test_dataset = random_split(dataset,(500,74))
+    train_dataset , test_dataset = random_split(dataset,(1000,66))
     
         
     #DataLoader

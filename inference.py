@@ -7,7 +7,7 @@ Created on Tue Oct 12 13:08:40 2021
 import torch
 import torchvision.transforms as T
 from PIL import Image
-from deepLabModel import DeepLabModel
+from models import DeepLabModel, LrASPPModel, get_Unet
 import matplotlib.pyplot as plt
 
 def inference(img_path, model_path):
@@ -22,7 +22,7 @@ def inference(img_path, model_path):
     img = transform(img)
     
     #load the trained model
-    model = DeepLabModel(43)
+    model = get_Unet(23)
     model.load_state_dict(torch.load(model_path))
     
     with torch.no_grad():
@@ -53,8 +53,8 @@ def inference(img_path, model_path):
         
    
         
-img_path = 'archive/TrayDataset/XTest/1005a.jpg'
+img_path = 'Data_OCID/images/result_2018-08-20-09-30-36.png'
 model_path = 'deeplab_model.pth'
 inference(img_path, model_path)    
  
-#plt.imshow(Image.open('archive/TrayDataset/yTest/1005a.png')   )        
+#plt.imshow(Image.open('Data_OCID/labels/result_2018-08-20-09-30-27.png')   )        
