@@ -19,7 +19,13 @@ def inference(img_path, model_path):
             T.ToTensor()
             ])
     
+    #transform the img
     img = transform(img)
+    
+    #load and transform ground truth
+    ground_truth = Image.open(img_path.replace('images', 'labels'))
+    ground_truth = transform(ground_truth)
+    
     
     #load the trained model
     model = get_Unet(23)
@@ -35,11 +41,10 @@ def inference(img_path, model_path):
             DEVICE = 'cpu'
             
         model = model.to(DEVICE)
-        img = img.to(DEVICE)
-        
+        image = img.to(DEVICE)
         
         #Pass the image
-        pred = model(img.unsqueeze(0))
+        pred = model(image.unsqueeze(0))
         
         #convert it back to cpu
         pred = pred.cpu()
@@ -47,14 +52,32 @@ def inference(img_path, model_path):
         #Change the number of channels
         pred = torch.argmax(pred, dim = 1)
         
+        #print(img.shape)
+        plt.subplot(1,3,1)
+        plt.gca().set_title('Original Image')
+        plt.imshow(img.permute(1,2,0))
+        plt.axis('off')
+        
         #display the image
-        plt.imshow(pred.view(128,128,1))
+        plt.subplot(1,3,2)
+        plt.gca().set_title('Predicted')
+        plt.imshow(pred.permute(1,2,0))
+        plt.axis('off')
+        
+        plt.subplot(1,3,3)
+        plt.gca().set_title('Ground Truth')
+        plt.imshow(ground_truth.permute(1,2,0))
+        plt.axis('off')
+        
+        
         print(pred.shape)
+        print(pred.max())
+        print(pred.unique())
         
    
         
-img_path = 'Data_OCID/images/result_2018-08-20-09-30-36.png'
+img_path = 'Data_OCID/images/result_2018-08-20-09-43-38.png'
 model_path = 'deeplab_model.pth'
 inference(img_path, model_path)    
  
-#plt.imshow(Image.open('Data_OCID/labels/result_2018-08-20-09-30-27.png')   )        
+#plt.imshow(Image.open('Data_OCID/labels/result_2018-08-20-09-30-27.png'))        

@@ -13,9 +13,10 @@ import numpy as np
 from customDataset import CustomDataset
 from models import DeepLabModel, LrASPPModel, get_Unet
 from tqdm import tqdm
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
-import timeit
+from plots import *
+#import timeit
 
 
 def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
@@ -23,11 +24,15 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
     #list to store loss
     val_loss = []
     total_loss = []
+    iou_train = []
     meanioutrain = []
+    mean_pixacc_train = []
     pixelacctrain = []
+    iou_test = []
     meanioutest = []
+    mean_pixacc_test = []
     pixelacctest = []
-    mean_train_time = []
+    #mean_train_time = []
         
     for epoch in range(EPOCHS):
         
@@ -37,7 +42,6 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
         loop = tqdm(train_loader, desc= "Training Epoch")
         val_loop = tqdm(test_loader, desc = "Validation Epoch")
         
-
         #training set
         for b, (img, mask) in enumerate(loop):
             
@@ -48,7 +52,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
             mask = mask.to(device = DEVICE)
             
             #start the timer
-            start = timeit.default_timer()
+            #start = timeit.default_timer()
             
             #forward pass
             y_pred = model(img)
@@ -60,24 +64,28 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
             optimizer.step()
             
             #stop the timer
-            stop = timeit.default_timer()
-            train_time = stop - start
+            #stop = timeit.default_timer()
+            #train_time = stop - start
             
             #evalutaion metrics
-            meanioutrain.append(meanIOU(mask, y_pred))
+            iou_train.append(meanIOU(mask, y_pred))
             pixelacctrain.append(pixelAcc(mask, y_pred))
-            mean_train_time.append(train_time) 
+            #mean_train_time.append(train_time) 
                        
             #display the loss
             loop.set_postfix({'Epoch': epoch+1  ,
                               'Loss': loss.item(),
-                              'Mean IOU': np.mean(meanioutrain),
+                              'Mean IOU': np.mean(iou_train),
                               'Pixel Acc': np.mean(pixelacctrain),
-                              'Train time image': np.mean(mean_train_time)
+                              #'Train time image': np.mean(mean_train_time)
                               })
-              
+         
+            
         #append the loss    
         total_loss.append(loss.item())
+        meanioutrain.append(np.mean(iou_train))
+        mean_pixacc_train.append(np.mean(pixelacctrain))
+        
         
         #validation set
         with torch.no_grad():
@@ -95,22 +103,26 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
                 v_loss = criterion(val_pred, mask)
                 
                 #accuracy and iou
-                meanioutest.append(meanIOU(mask, val_pred))
+                iou_test.append(meanIOU(mask, val_pred))
                 pixelacctest.append(pixelAcc(mask, val_pred))
             
                 #display in tqdm
                 val_loop.set_postfix({'Epoch ': epoch+1  ,
                               'Loss ': v_loss.item(),
-                              'Mean IOU ': np.mean(meanioutest),
+                              'Mean IOU ': np.mean(iou_test),
                               'Pixel Acc :': np.mean(pixelacctest)
                               })
                 
             #append the loss    
             val_loss.append(v_loss.item())
+            meanioutest.append(np.mean(iou_train))
+            mean_pixacc_test.append(np.mean(pixelacctest))
             
     torch.save(model.state_dict(),'deeplab_model.pth')
     
-    return model, total_loss, val_loss
+    metrics = (total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test)
+    
+    return model, metrics
             
 if __name__ == "__main__":
 
@@ -119,12 +131,11 @@ if __name__ == "__main__":
     
     #Trainging Params
     BATCH_SIZE = 16
-    EPOCHS = 20
+    EPOCHS = 2
     IMG_SIZE = 128
     SEED = 24
     LR = 1e-3
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-    
     
     #SEED
     np.random.seed(SEED)
@@ -167,15 +178,16 @@ if __name__ == "__main__":
     print('Number of trainable parameters :', count_parameters(model))
     
     #train
-    trained_model, train_loss, val_loss = train(model, train_loader, test_loader,
+    trained_model, metrics = train(model, train_loader, test_loader,
                                                 criterion, optimizer, EPOCHS)
     
-    #plot the loss
-    plt.figure(figsize=(8,8))
-    plt.title('Loss per Epoch', fontsize=22)
-    plt.plot(train_loss, label='Training loss')
-    plt.plot(val_loss, label='Validation loss')
-    plt.xlabel('Epochs', fontsize=16)
-    plt.ylabel('Loss', fontsize=16)
-    plt.legend(frameon=False)
-    plt.savefig('loss plot')
+    total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test = metrics
+    
+    #loss plot
+    loss_plot(total_loss, val_loss)
+    
+    #mean iou plot
+    mean_iou_plot( EPOCHS, meanioutrain, meanioutest, 'Mean IoU')
+    
+    #mean pixel accuracy
+    pixel_acc_plot( EPOCHS, mean_pixacc_train, mean_pixacc_test, 'Mean Pixel Accuracy')
