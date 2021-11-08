@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from torchmetrics import IoU
-
+from torchsummary import summary
 
 def meanIOU(label, pred, num_classes = 23):
     
@@ -37,3 +37,6 @@ def pixelAcc(label, pred):
     
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad) 
+
+
+#summary(model, (3, 128, 128))

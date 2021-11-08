@@ -47,11 +47,5 @@ class CustomDataset(Dataset):
                
         return  img, mask
 
-#transform = T.Compose([
-#            T.Resize((128, 128)),
-#            ])
-#dataset = CustomDataset(img_dir = 'Data_OCID',
-#                        transform=transform)
-
 #the dimensions of the image are (480,640, 3)
 #the dimensions of the mask are (480,640)

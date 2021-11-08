@@ -32,7 +32,7 @@ if not os.path.exists('test_plots'):
 if not os.path.exists('plots'):
     os.makedirs('plots')
 
-def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
+def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_name):
     
     #list to store loss
     val_loss = []
@@ -130,7 +130,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
             meanioutest.append(np.mean(iou_test))
             mean_pixacc_test.append(np.mean(pixelacctest))
             
-    torch.save(model.state_dict(),'deeplab_model.pth')
+    torch.save(model.state_dict(), model_name +'.pth')
     
     metrics = (total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test)
     
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     
     #train
     trained_model, metrics = train(model, train_loader, test_loader,
-                                                criterion, optimizer, EPOCHS)
+                                                criterion, optimizer, EPOCHS, 'unet')
     
     total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test = metrics
     
@@ -204,7 +204,5 @@ if __name__ == "__main__":
     #mean pixel accuracy
     pixel_acc_plot( EPOCHS, mean_pixacc_train, mean_pixacc_test, 'Mean Pixel Accuracy')
     
-    counter = 0       
-    for img, mask in test_dataset:        
-        inference(img, mask, trained_model, str(counter))
-        counter += 1 
+    #inference    
+    inference_time, iou, pix_acc = inference(trained_model, test_dataset)
