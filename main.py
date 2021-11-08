@@ -6,6 +6,7 @@ Created on Fri Oct  8 16:49:29 2021
 """
 
 import torch
+import os
 from torch.utils.data import DataLoader, random_split
 import torch.nn as nn
 import torchvision.transforms as T
@@ -16,8 +17,20 @@ from tqdm import tqdm
 #import matplotlib.pyplot as plt
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
 from plots import *
+from inference import inference
 #import timeit
 
+#create necessary directories
+#get current working directory
+cwd = os.getcwd()
+
+#create a directory if doesnt exist
+if not os.path.exists('test_plots'):
+    os.makedirs('test_plots')
+    
+#create a directory if doesnt exist
+if not os.path.exists('plots'):
+    os.makedirs('plots')
 
 def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
     
@@ -45,7 +58,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
         #training set
         for b, (img, mask) in enumerate(loop):
             
-            torch.cuda.empty_cache()
+            #torch.cuda.empty_cache()
             
             #change to device
             img = img.to(device = DEVICE)
@@ -75,18 +88,17 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
             #display the loss
             loop.set_postfix({'Epoch': epoch+1  ,
                               'Loss': loss.item(),
-                              'Mean IOU': np.mean(iou_train),
-                              'Pixel Acc': np.mean(pixelacctrain),
+                              'Mean IOU': iou_train.item(),
+                              'Pixel Acc': pixelacctrain.item(),
                               #'Train time image': np.mean(mean_train_time)
                               })
          
             
         #append the loss    
         total_loss.append(loss.item())
-        meanioutrain.append(np.mean(iou_train))
-        mean_pixacc_train.append(np.mean(pixelacctrain))
-        
-        
+        meanioutrain.append(iou_train.item())
+        mean_pixacc_train.append(pixelacctrain.item())
+         
         #validation set
         with torch.no_grad():
             
@@ -115,7 +127,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS):
                 
             #append the loss    
             val_loss.append(v_loss.item())
-            meanioutest.append(np.mean(iou_train))
+            meanioutest.append(np.mean(iou_test))
             mean_pixacc_test.append(np.mean(pixelacctest))
             
     torch.save(model.state_dict(),'deeplab_model.pth')
@@ -131,7 +143,7 @@ if __name__ == "__main__":
     
     #Trainging Params
     BATCH_SIZE = 16
-    EPOCHS = 2
+    EPOCHS = 50
     IMG_SIZE = 128
     SEED = 24
     LR = 1e-3
@@ -151,7 +163,7 @@ if __name__ == "__main__":
                             transform=transform)
     
     #train test split
-    train_dataset , test_dataset = random_split(dataset,(1000,66))
+    train_dataset , test_dataset = random_split(dataset,(900,166))
     
         
     #DataLoader
@@ -191,3 +203,8 @@ if __name__ == "__main__":
     
     #mean pixel accuracy
     pixel_acc_plot( EPOCHS, mean_pixacc_train, mean_pixacc_test, 'Mean Pixel Accuracy')
+    
+    counter = 0       
+    for img, mask in test_dataset:        
+        inference(img, mask, trained_model, str(counter))
+        counter += 1 

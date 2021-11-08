@@ -38,6 +38,7 @@ def mean_iou_plot(epochs, mean_iou_train, mean_iou_test, desc):
     plt.plot(mean_iou_test, label='Mean IoU test')
     plt.xlabel('Epochs', fontsize=16)
     plt.ylabel('Mean Intersection Over Union', fontsize=16)
+    #plt.xticks(list(range(1,epochs+1)))
     plt.legend(frameon=False)
     plt.savefig(os.path.join(cwd, 'plots', str(desc).replace(' ', '_')))
     
@@ -50,5 +51,6 @@ def pixel_acc_plot(epochs, mean_pixelacc_train, mean_pixelacc_test, desc):
     plt.plot(mean_pixelacc_test, label='Pixel acc test')
     plt.xlabel('Epochs', fontsize=16)
     plt.ylabel('Mean Pixel Accuracy', fontsize=16)
+    
     plt.legend(frameon=False)
     plt.savefig(os.path.join(cwd, 'plots', str(desc).replace(' ', '_')))
