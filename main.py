@@ -37,18 +37,23 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
     #list to store loss
     val_loss = []
     total_loss = []
-    iou_train = []
+    
     meanioutrain = []
     mean_pixacc_train = []
-    pixelacctrain = []
-    iou_test = []
+    
+    
     meanioutest = []
     mean_pixacc_test = []
-    pixelacctest = []
+    
     #mean_train_time = []
         
     for epoch in range(EPOCHS):
         
+        iou_train = []
+        pixelacctrain = []
+        iou_test = []
+        pixelacctest = []
+                
         #set the model to train mode
         model.train()
         
@@ -88,16 +93,16 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
             #display the loss
             loop.set_postfix({'Epoch': epoch+1  ,
                               'Loss': loss.item(),
-                              'Mean IOU': iou_train.item(),
-                              'Pixel Acc': pixelacctrain.item(),
+                              'Mean IOU': np.mean(iou_train),
+                              'Pixel Acc': np.mean(pixelacctrain),
                               #'Train time image': np.mean(mean_train_time)
                               })
          
             
         #append the loss    
         total_loss.append(loss.item())
-        meanioutrain.append(iou_train.item())
-        mean_pixacc_train.append(pixelacctrain.item())
+        meanioutrain.append(np.mean(iou_train))
+        mean_pixacc_train.append(np.mean(pixelacctrain))
          
         #validation set
         with torch.no_grad():
