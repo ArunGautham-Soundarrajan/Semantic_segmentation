@@ -11,7 +11,7 @@ from evaluation_metrics import *
 import os
 #from main import test_dataset
 
-def inference(model, dataset):
+def inference(model, dataset, store = False):
     
     timings = []
     iou = []
@@ -85,8 +85,8 @@ def inference(model, dataset):
             
             #metrics = 'IoU: '+ str(iou) + '\n' + 'Pixel acc: '+ str(pixel_accuracy)
             #plt.text(0.95, 0.01, metrics)
-            
-            plt.savefig(os.path.join('test_plots', str(counter)))
+            if(store == True):
+                plt.savefig(os.path.join('test_plots', str(counter)))
             #print(iou)
             #print(pixel_accuracy)
             
