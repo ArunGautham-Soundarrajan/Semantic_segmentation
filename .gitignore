@@ -140,3 +140,6 @@ archive
 data
 deeplab_model.pth
 Data_OCID
+YCB_cuboid
+YCB_curved
+YCB_mixed

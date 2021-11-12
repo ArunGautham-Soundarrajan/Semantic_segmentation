@@ -13,7 +13,7 @@ import torch.nn as nn
 import torchvision.transforms as T
 import numpy as np
 from customDataset import CustomDataset
-from models import DeepLabModel, LrASPPModel, get_Unet
+from models import DeepLabModel, LrASPPModel, get_Unet, get_PSPNet
 from tqdm import tqdm
 #import matplotlib.pyplot as plt
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
@@ -30,7 +30,6 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
     
     meanioutrain = []
     mean_pixacc_train = []
-    
     
     meanioutest = []
     mean_pixacc_test = []
@@ -115,7 +114,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
                 pixelacctest.append(pixelAcc(mask, val_pred))
             
                 #display in tqdm
-                val_loop.set_postfix({'Epoch ': epoch+1  ,
+                val_loop.set_postfix({'Epoch ': epoch+1,
                               'Loss ': v_loss.item(),
                               'Mean IOU ': np.mean(iou_test),
                               'Pixel Acc :': np.mean(pixelacctest)
@@ -141,11 +140,23 @@ if __name__ == "__main__":
     my_parser.add_argument('Model', 
                            metavar='model',
                            type = str,
-                           help = 'b: Baseline \t d: Deep Lab')
+                           help = 'b: Baseline \t d: Deep Lab \t p: PSPNet'
+                           )
+    
+    my_parser.add_argument('Data', 
+                           metavar='data',
+                           type = int,
+                           help = '1: ARID20 \t 2: YCB Cuboid \t 3: YCB Curved 4: \t YCB Mixed'
+                           )
     
     args= my_parser.parse_args()
     
+    #store the arguments in the variable
     model_to_train = args.Model
+    data_to_use = args.Data
+    
+    #print(model_to_train)
+    #print(data_to_use)
     
     
     #create necessary directories
@@ -167,10 +178,6 @@ if __name__ == "__main__":
     if not os.path.exists('models'):
         os.makedirs('models')
         
-    #print(model_to_train)
-
-    #Data directory
-    img_dir = 'Data_OCID'
     
     #Trainging Params
     BATCH_SIZE = 16
@@ -189,6 +196,38 @@ if __name__ == "__main__":
             T.Resize((IMG_SIZE,IMG_SIZE)),
             ])
     
+    if model_to_train == 'b':
+        
+        model = get_Unet(num_classes=23).to(device=DEVICE)
+        model_name = 'Unet'
+        
+    elif model_to_train == 'd':
+        
+        model = DeepLabModel(num_classes=23).to(device=DEVICE)
+        model_name = 'Deep_lab'
+    
+    elif model_to_train == 'p':
+        
+        model = get_PSPNet(num_classes=23).to(device=DEVICE)
+        model_name = 'PSPNet'
+    
+    #Data directory
+    if data_to_use == 1:
+        img_dir = 'Data_OCID'
+        model_name = model_name + '_ARID20'
+        
+    elif data_to_use == 2:
+        img_dir = 'YCB_cuboid'
+        model_name = model_name + 'YCB_cuboid'
+        
+    elif data_to_use == 3:
+        img_dir = 'YCB_curved'
+        model_name = model_name + '_YCB_curved'
+        
+    elif data_to_use == 4:
+        img_dir = 'YCB_mixed'
+        model_name = model_name + '_YCB_mixed'
+    
     #Dataset
     dataset = CustomDataset(img_dir = img_dir,
                             transform=transform)
@@ -204,22 +243,7 @@ if __name__ == "__main__":
     
     test_loader = DataLoader(dataset = test_dataset,
                              batch_size= BATCH_SIZE)
-    
-    if model_to_train == 'b':
         
-        model = get_Unet(num_classes=23).to(device=DEVICE)
-        model_name = 'Unet'
-        
-    elif model_to_train == 'd':
-        
-        model = DeepLabModel(num_classes=23).to(device=DEVICE)
-        model_name = 'Deep_lab'
-    
-    #Model
-    #model = DeepLabModel(num_classes=23).to(device=DEVICE)
-    #model = LrASPPModel(num_classes=23).to(device=DEVICE)
-    #model = get_Unet(num_classes=23).to(device=DEVICE)
-    
     #loss function
     criterion = nn.CrossEntropyLoss()
     
@@ -231,7 +255,7 @@ if __name__ == "__main__":
     
     #train
     trained_model, metrics = train(model, train_loader, test_loader,
-                                                criterion, optimizer, EPOCHS, model_name)
+                                   criterion, optimizer, EPOCHS, model_name)
     
     total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test = metrics
     
@@ -242,7 +266,7 @@ if __name__ == "__main__":
     metrics_df['Iou_test'] = meanioutest
     metrics_df['Pixel_acc_train'] = mean_pixacc_train
     metrics_df['Pixel_acc_test'] = mean_pixacc_test
-    metrics_df.to_csv( os.path.join('metrics', 'baseline.csv'), index = False)
+    metrics_df.to_csv( os.path.join('metrics_', model_name + '.csv'), index = False)
     
     #loss plot
     loss_plot(total_loss, val_loss)

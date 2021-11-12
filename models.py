@@ -45,9 +45,19 @@ class LrASPPModel(nn.Module):
         y = self.model(x)['out']
     
         return y
-    
+
+#Unet Pretrained model    
 def get_Unet(num_classes):
     model =  smp.Unet(
+                 encoder_name='resnet34',
+                 encoder_weights='imagenet',
+                 in_channels=3,
+                 classes=num_classes)
+    return model
+
+#PSPNet Pretrained model
+def get_PSPNet(num_classes):
+    model =  smp.PSPNet()(
                  encoder_name='resnet34',
                  encoder_weights='imagenet',
                  in_channels=3,
