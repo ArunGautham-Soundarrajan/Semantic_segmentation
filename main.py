@@ -13,13 +13,14 @@ import torch.nn as nn
 import torchvision.transforms as T
 import numpy as np
 from customDataset import CustomDataset
-from models import DeepLabModel, LrASPPModel, get_Unet, get_PSPNet
+from models import get_Unet, get_PSPNet, get_DeepLab
 from tqdm import tqdm
 #import matplotlib.pyplot as plt
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
 from plots import *
 from inference import inference
 import argparse
+import math
 #import timeit
 
 def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_name):
@@ -180,10 +181,10 @@ if __name__ == "__main__":
         
     
     #Trainging Params
-    BATCH_SIZE = 16
+    BATCH_SIZE = 32
     EPOCHS = 50
     IMG_SIZE = 128
-    SEED = 24
+    SEED = 29
     LR = 1e-3
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
     
@@ -196,19 +197,33 @@ if __name__ == "__main__":
             T.Resize((IMG_SIZE,IMG_SIZE)),
             ])
     
+    #Number of classes
+    if data_to_use == 1:
+        NUM_CLASSES = 23
+        
+    elif data_to_use == 2:
+        NUM_CLASSES = 13
+        
+    elif data_to_use == 3: 
+        NUM_CLASSES = 13
+        
+    elif data_to_use == 4:
+        NUM_CLASSES = 13
+      
+    #Select the model to train    
     if model_to_train == 'b':
         
-        model = get_Unet(num_classes=23).to(device=DEVICE)
+        model = get_Unet(num_classes=NUM_CLASSES).to(device=DEVICE)
         model_name = 'Unet'
         
     elif model_to_train == 'd':
         
-        model = DeepLabModel(num_classes=23).to(device=DEVICE)
+        model = get_DeepLab(num_classes=NUM_CLASSES).to(device=DEVICE)
         model_name = 'Deep_lab'
     
     elif model_to_train == 'p':
         
-        model = get_PSPNet(num_classes=23).to(device=DEVICE)
+        model = get_PSPNet(num_classes=NUM_CLASSES).to(device=DEVICE)
         model_name = 'PSPNet'
     
     #Data directory
@@ -232,8 +247,10 @@ if __name__ == "__main__":
     dataset = CustomDataset(img_dir = img_dir,
                             transform=transform)
     
-    #train test split
-    train_dataset , test_dataset = random_split(dataset,(900,166))
+    train_percent = math.floor(dataset.__len__()*0.9)
+    test_percent = dataset.__len__() - train_percent
+    #train test split 90:10
+    train_dataset , test_dataset = random_split(dataset,( train_percent, test_percent))
     
         
     #DataLoader
@@ -266,10 +283,10 @@ if __name__ == "__main__":
     metrics_df['Iou_test'] = meanioutest
     metrics_df['Pixel_acc_train'] = mean_pixacc_train
     metrics_df['Pixel_acc_test'] = mean_pixacc_test
-    metrics_df.to_csv( os.path.join('metrics_', model_name + '.csv'), index = False)
+    metrics_df.to_csv( os.path.join('metrics', model_name + '_.csv'), index = False)
     
     #loss plot
-    loss_plot(total_loss, val_loss)
+    loss_plot(total_loss, val_loss, model_name + '_Loss')
     
     #mean iou plot
     mean_iou_plot(EPOCHS, meanioutrain, meanioutest, model_name +'_Mean IoU')
@@ -278,5 +295,5 @@ if __name__ == "__main__":
     pixel_acc_plot(EPOCHS, mean_pixacc_train, mean_pixacc_test, model_name +'_Mean Pixel Accuracy')
     
     #inference    
-    inference_time, iou, pix_acc = inference(trained_model, test_dataset)
+    #inference_time, iou, pix_acc = inference(trained_model, test_dataset)
     

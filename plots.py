@@ -17,7 +17,7 @@ if not os.path.exists('plots'):
     os.makedirs('plots')
 
 #function to create a loss plot
-def loss_plot(train_loss,val_loss):
+def loss_plot(train_loss,val_loss, desc):
 
     plt.figure(figsize=(8,8))
     plt.title('Loss per Epoch', fontsize=22)
@@ -26,7 +26,7 @@ def loss_plot(train_loss,val_loss):
     plt.xlabel('Epochs', fontsize=16)
     plt.ylabel('Loss', fontsize=16)
     plt.legend(frameon=False)
-    plt.savefig(os.path.join(cwd, 'plots','loss plot'))
+    plt.savefig(os.path.join(cwd, 'plots', str(desc).replace(' ', '_')))
 
     
 #function to plot the Mean Iou

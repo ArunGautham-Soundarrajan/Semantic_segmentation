@@ -5,7 +5,7 @@ Created on Tue Oct 12 13:08:40 2021
 @author: Arun Gautham Soundarrajan
 """
 import torch
-from models import DeepLabModel, LrASPPModel, get_Unet
+from models import *
 import matplotlib.pyplot as plt
 from evaluation_metrics import *
 import os
