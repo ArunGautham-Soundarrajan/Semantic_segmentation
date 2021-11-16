@@ -11,16 +11,18 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms as T
 from PIL import Image
-
+import math
 
 class CustomDataset(Dataset):
     
-    def __init__(self, img_dir, transform = None):
+    def __init__(self, img_dir, pixel_map, transform = None):
         
         self.img_dir = img_dir
         self.imgs = list(sorted(os.listdir(self.img_dir +'\\images')))
         self.masks = list(sorted(os.listdir(self.img_dir + '\\labels')))
         self.transform = transform
+        self.pixel_map = pixel_map
+    
     
     def __len__(self):
         
@@ -34,7 +36,7 @@ class CustomDataset(Dataset):
         img = Image.open(image).convert("RGB")
         mask = Image.open(mask_path)
         mask = mask.convert('L')
-        
+         
         if self.transform is not None:
             img = self.transform(img)
             mask = self.transform(mask)
@@ -43,9 +45,16 @@ class CustomDataset(Dataset):
         mask = torch.from_numpy(mask)
         mask = mask.type(torch.LongTensor)
         
+        if self.pixel_map == True: 
+            for i in np.unique(mask):
+                
+                value = math.floor(i/12) * 12
+                mask[mask == i] = value
+             
+            mask = mask/12  
+            mask = mask.type(torch.LongTensor)
+            
         img = T.ToTensor()(img)
-               
+
         return  img, mask
 
-#the dimensions of the image are (480,640, 3)
-#the dimensions of the mask are (480,640)

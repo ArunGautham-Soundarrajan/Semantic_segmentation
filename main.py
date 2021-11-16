@@ -147,7 +147,7 @@ if __name__ == "__main__":
     my_parser.add_argument('Data', 
                            metavar='data',
                            type = int,
-                           help = '1: ARID20 \t 2: YCB Cuboid \t 3: YCB Curved 4: \t YCB Mixed'
+                           help = '1: ARID20 \t 2: FAT data'
                            )
     
     args= my_parser.parse_args()
@@ -202,14 +202,8 @@ if __name__ == "__main__":
         NUM_CLASSES = 23
         
     elif data_to_use == 2:
-        NUM_CLASSES = 13
-        
-    elif data_to_use == 3: 
-        NUM_CLASSES = 13
-        
-    elif data_to_use == 4:
-        NUM_CLASSES = 13
-      
+        NUM_CLASSES = 22
+              
     #Select the model to train    
     if model_to_train == 'b':
         
@@ -230,22 +224,20 @@ if __name__ == "__main__":
     if data_to_use == 1:
         img_dir = 'Data_OCID'
         model_name = model_name + '_ARID20'
+        dataset = CustomDataset(img_dir = img_dir,
+                                pixel_map=False,
+                                transform=transform)
         
     elif data_to_use == 2:
-        img_dir = 'YCB_cuboid'
-        model_name = model_name + 'YCB_cuboid'
-        
-    elif data_to_use == 3:
-        img_dir = 'YCB_curved'
-        model_name = model_name + '_YCB_curved'
-        
-    elif data_to_use == 4:
-        img_dir = 'YCB_mixed'
-        model_name = model_name + '_YCB_mixed'
-    
+        img_dir = 'fat_data'
+        model_name = model_name + '_FAT'
+        dataset = CustomDataset(img_dir = img_dir,
+                                pixel_map=True,
+                                transform=transform)
+            
     #Dataset
-    dataset = CustomDataset(img_dir = img_dir,
-                            transform=transform)
+    #dataset = CustomDataset(img_dir = img_dir,
+                            #transform=transform)
     
     train_percent = math.floor(dataset.__len__()*0.9)
     test_percent = dataset.__len__() - train_percent

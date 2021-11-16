@@ -132,7 +132,7 @@ dmypy.json
 
 .pth
 
-
+Comparison.ipynb
 
 # large files
 CLUBS_dataset_sample_data_small
@@ -143,3 +143,4 @@ Data_OCID
 YCB_cuboid
 YCB_curved
 YCB_mixed
+fat_data
