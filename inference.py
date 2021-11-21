@@ -4,14 +4,36 @@ Created on Tue Oct 12 13:08:40 2021
 
 @author: Arun Gautham Soundarrajan
 """
+
+import os
 import torch
-from models import *
 import matplotlib.pyplot as plt
 from evaluation_metrics import *
-import os
-#from main import test_dataset
+from models import *
 
 def inference(model, dataset, store = False):
+    '''
+    
+
+    Parameters
+    ----------
+    model : TYPE
+        The trained model.
+    dataset : TYPE
+        The test dataset to test the model.
+    store : BOOL, optional
+        Set true if wanted to save the plots. The default is False.
+
+    Returns
+    -------
+    timings : LIST(Float)
+        The inference time for each image.
+    iou : LIST(Float)
+        MeanIoU for each image.
+    pix_acc : LIST(Float)
+        Mean Pixel Accuracy for each image.
+
+    '''
     
     timings = []
     iou = []
@@ -19,8 +41,7 @@ def inference(model, dataset, store = False):
     counter = 0
     
     starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-    
-    
+       
     for img, mask in dataset:       
            
         with torch.no_grad():
@@ -32,8 +53,7 @@ def inference(model, dataset, store = False):
                 DEVICE = 'cuda'
             else:
                 DEVICE = 'cpu'
-                
-                
+                 
             #convert to device    
             model = model.to(DEVICE)
             image = img.to(DEVICE)
@@ -59,44 +79,28 @@ def inference(model, dataset, store = False):
               
             #Change the number of channels
             pred = torch.argmax(pred, dim = 1)
-            
-            #print(pred.shape)
-            #print(img.shape)
-            #print(ground_truth.shape)
-            #print(img.shape)
-            
+                        
             #plots
-            
-            plt.subplot(1,3,1)
-            plt.gca().set_title('Original Image')
-            plt.imshow(img.cpu().permute(1,2,0))
-            plt.axis('off')
-            
-            #display the image
-            plt.subplot(1,3,2)
-            plt.gca().set_title('Predicted')
-            plt.imshow(pred.cpu().permute(1,2,0))
-            plt.axis('off')
-            
-            plt.subplot(1,3,3)
-            plt.gca().set_title('Ground Truth')
-            plt.imshow(ground_truth.cpu())
-            plt.axis('off')
-            
-            #metrics = 'IoU: '+ str(iou) + '\n' + 'Pixel acc: '+ str(pixel_accuracy)
-            #plt.text(0.95, 0.01, metrics)
             if(store == True):
+                
+                plt.subplot(1,3,1)
+                plt.gca().set_title('Original Image')
+                plt.imshow(img.cpu().permute(1,2,0))
+                plt.axis('off')
+                
+                #display the image
+                plt.subplot(1,3,2)
+                plt.gca().set_title('Predicted')
+                plt.imshow(pred.cpu().permute(1,2,0))
+                plt.axis('off')
+                
+                plt.subplot(1,3,3)
+                plt.gca().set_title('Ground Truth')
+                plt.imshow(ground_truth.cpu())
+                plt.axis('off')
                 plt.savefig(os.path.join('test_plots', str(counter)))
-            #print(iou)
-            #print(pixel_accuracy)
             
             counter +=1
             
     return timings, iou, pix_acc
 
-
-#img_path = 'Data_OCID/images/result_2018-08-20-09-43-38.png'
-
-#inference(img_path, model_path)    
- 
-#plt.imshow(Image.open('Data_OCID/labels/result_2018-08-20-09-30-27.png'))        

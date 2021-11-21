@@ -3,7 +3,6 @@
 
 import os
 import shutil
-import random 
 
 base_path = os.getcwd()
 data_path = os.path.join(os.getcwd(), 'fat', 'fat','mixed','kitchen_0')  

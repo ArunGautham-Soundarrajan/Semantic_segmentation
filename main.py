@@ -5,25 +5,57 @@ Created on Fri Oct  8 16:49:29 2021
 @author: Arun Gautham Soundarrajan
 """
 
-import torch
 import os
+import numpy as np
 import pandas as pd
-from torch.utils.data import DataLoader, random_split
+
+import torch
 import torch.nn as nn
 import torchvision.transforms as T
-import numpy as np
-from customDataset import CustomDataset
-from models import get_Unet, get_PSPNet, get_DeepLab
+from torch.utils.data import DataLoader, random_split
+
 from tqdm import tqdm
-#import matplotlib.pyplot as plt
+import argparse
+import math
+
+from customDataset import CustomDataset
+from models import get_Unet, get_PSPNet, get_DeepLabv3_plus
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
 from plots import *
 from inference import inference
-import argparse
-import math
-#import timeit
 
-def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_name):
+
+def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_classes, model_name):
+    '''
+    
+    Parameters
+    ----------
+    model : TYPE
+        Pytorch model to train.
+    train_loader : TYPE
+        Data loader for training set.
+    test_loader : TYPE
+        Data loader for validation/testing set.
+    criterion : TYPE
+        Loss Function.
+    optimizer : TYPE
+        Optimizer of choice.
+    EPOCHS : INT
+        The number of Epochs to train for.
+    num_classes : INT
+        The number of classes.
+    model_name : STR
+        The name of model for saving it.
+
+    Returns
+    -------
+    model : TYPE
+        Trained model.
+    metrics : TUPLE
+        Tuple containing all the evaluation metrics.
+
+    '''
+    
     
     #list to store loss
     val_loss = []
@@ -34,9 +66,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
     
     meanioutest = []
     mean_pixacc_test = []
-    
-    #mean_train_time = []
-        
+            
     for epoch in range(EPOCHS):
         
         iou_train = []
@@ -52,15 +82,10 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
         
         #training set
         for b, (img, mask) in enumerate(loop):
-            
-            #torch.cuda.empty_cache()
-            
+                        
             #change to device
             img = img.to(device = DEVICE)
             mask = mask.to(device = DEVICE)
-            
-            #start the timer
-            #start = timeit.default_timer()
             
             #forward pass
             y_pred = model(img)
@@ -70,13 +95,9 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            
-            #stop the timer
-            #stop = timeit.default_timer()
-            #train_time = stop - start
-            
+                        
             #evalutaion metrics
-            iou_train.append(meanIOU(mask, y_pred))
+            iou_train.append(meanIOU(mask, y_pred, num_classes))
             pixelacctrain.append(pixelAcc(mask, y_pred))
             #mean_train_time.append(train_time) 
                        
@@ -85,10 +106,8 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
                               'Loss': loss.item(),
                               'Mean IOU': np.mean(iou_train),
                               'Pixel Acc': np.mean(pixelacctrain),
-                              #'Train time image': np.mean(mean_train_time)
                               })
          
-            
         #append the loss    
         total_loss.append(loss.item())
         meanioutrain.append(np.mean(iou_train))
@@ -111,7 +130,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, model_
                 v_loss = criterion(val_pred, mask)
                 
                 #accuracy and iou
-                iou_test.append(meanIOU(mask, val_pred))
+                iou_test.append(meanIOU(mask, val_pred, num_classes))
                 pixelacctest.append(pixelAcc(mask, val_pred))
             
                 #display in tqdm
@@ -155,11 +174,7 @@ if __name__ == "__main__":
     #store the arguments in the variable
     model_to_train = args.Model
     data_to_use = args.Data
-    
-    #print(model_to_train)
-    #print(data_to_use)
-    
-    
+        
     #create necessary directories
     #get current working directory
     cwd = os.getcwd()
@@ -188,6 +203,12 @@ if __name__ == "__main__":
     LR = 1e-3
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
     
+    
+    print(f'Training using {DEVICE}') 
+    if DEVICE == 'cuda':
+        DEVICE_NUM = torch.cuda.current_device()
+        print('Device name : ',torch.cuda.get_device_name(DEVICE_NUM))    
+    
     #SEED
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -212,8 +233,8 @@ if __name__ == "__main__":
         
     elif model_to_train == 'd':
         
-        model = get_DeepLab(num_classes=NUM_CLASSES).to(device=DEVICE)
-        model_name = 'Deep_lab'
+        model = get_DeepLabv3_plus(num_classes=NUM_CLASSES).to(device=DEVICE)
+        model_name = 'Deep_lab_v3+'
     
     elif model_to_train == 'p':
         
@@ -234,17 +255,13 @@ if __name__ == "__main__":
         dataset = CustomDataset(img_dir = img_dir,
                                 pixel_map=True,
                                 transform=transform)
-            
-    #Dataset
-    #dataset = CustomDataset(img_dir = img_dir,
-                            #transform=transform)
-    
+                
     train_percent = math.floor(dataset.__len__()*0.9)
     test_percent = dataset.__len__() - train_percent
+    
     #train test split 90:10
     train_dataset , test_dataset = random_split(dataset,( train_percent, test_percent))
-    
-        
+     
     #DataLoader
     train_loader = DataLoader(dataset = train_dataset, 
                               batch_size= BATCH_SIZE, 
@@ -260,11 +277,11 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr = LR)
     
     #number of parameters
-    print('Number of trainable parameters :', count_parameters(model))
+    print('\nNumber of trainable parameters :', count_parameters(model))
     
     #train
     trained_model, metrics = train(model, train_loader, test_loader,
-                                   criterion, optimizer, EPOCHS, model_name)
+                                   criterion, optimizer, EPOCHS, NUM_CLASSES, model_name)
     
     total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test = metrics
     

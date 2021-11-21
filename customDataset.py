@@ -7,15 +7,33 @@ Created on Thu Oct  7 20:49:28 2021
 
 import os
 import numpy as np
+import math
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms as T
 from PIL import Image
-import math
+
 
 class CustomDataset(Dataset):
     
     def __init__(self, img_dir, pixel_map, transform = None):
+        '''
+        
+
+        Parameters
+        ----------
+        img_dir : STR
+            The image directory path.
+        pixel_map : BOOL
+            To map the pixel only needed for FAT Dataset.
+        transform : TYPE, optional
+            Pytorch Transformations to apply on the image. The default is None.
+
+        Returns
+        -------
+        None.
+
+        '''
         
         self.img_dir = img_dir
         self.imgs = list(sorted(os.listdir(self.img_dir +'\\images')))
@@ -25,10 +43,35 @@ class CustomDataset(Dataset):
     
     
     def __len__(self):
+        '''
+        
+
+        Returns
+        -------
+        INT
+            The length of the dataset.
+
+        '''
         
         return len(self.imgs)
     
     def __getitem__(self, index):
+        '''
+        
+
+        Parameters
+        ----------
+        index : INT
+            Index of the image to retrieve.
+
+        Returns
+        -------
+        img : TENSOR
+            The image.
+        mask : TENSOR
+            The respective mask.
+
+        '''
         
         image = os.path.join(self.img_dir, 'images', self.imgs[index])
         mask_path = os.path.join(self.img_dir, 'labels', self.masks[index])
