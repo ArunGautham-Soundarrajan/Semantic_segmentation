@@ -101,3 +101,22 @@ class CustomDataset(Dataset):
 
         return  img, mask
 
+
+# Custom Dataset for self training
+class SelfTrainingDataset(Dataset):
+    
+    def __init__(self, img, mask):
+
+        self.img = img
+        self.mask = mask
+    
+    def __len__(self):
+
+        return len(self.img)
+    
+    def __getitem__(self, index):
+        
+        img = self.img[index]
+        mask = self.mask[index]
+        
+        return  img, mask.squeeze(0)
