@@ -18,7 +18,27 @@ from models import get_Unet, get_PSPNet, get_DeepLabv3_plus
 from evaluation_metrics import meanIOU, pixelAcc, count_parameters
 
 
-def prediction(model, test_dataset, criterion, NUM_CLASSES):
+def prediction(model, test_dataset, NUM_CLASSES):
+    '''
+    
+
+    Parameters
+    ----------
+    model : TYPE
+        The trained model.
+    test_dataset : DATASET
+        The test dataset to generate pseudo labels.
+    NUM_CLASSES : INT
+        The number of classes.
+
+    Returns
+    -------
+    img_list : LIST
+        A list of images.
+    mask_list : LIST
+        A list of respective pseudo labels.
+
+    '''
     
     img_list = []
     mask_list = []

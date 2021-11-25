@@ -7,8 +7,6 @@ Created on Fri Oct  8 13:00:49 2021
 
 import torch.nn as nn
 import torchvision
-from torchvision.models.segmentation.deeplabv3 import DeepLabHead
-from torchvision.models.segmentation.lraspp import LRASPPHead
 import segmentation_models_pytorch as smp
 
 #Unet Pretrained model    

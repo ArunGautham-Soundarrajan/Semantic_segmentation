@@ -105,16 +105,57 @@ class CustomDataset(Dataset):
 # Custom Dataset for self training
 class SelfTrainingDataset(Dataset):
     
+    
     def __init__(self, img, mask):
+        '''
+        
+
+        Parameters
+        ----------
+        img : LIST (img)
+            List of images.
+        mask : LIST (img)
+            List of pseudo labels.
+
+        Returns
+        -------
+        None.
+
+        '''
 
         self.img = img
         self.mask = mask
     
     def __len__(self):
+        '''
+        
+
+        Returns
+        -------
+        INT
+            The length of the dataset.
+
+        '''
 
         return len(self.img)
     
     def __getitem__(self, index):
+        '''
+        
+
+        Parameters
+        ----------
+        index : INT
+            The index of the img and mask to retrieve.
+
+        Returns
+        -------
+        img : TENSOR
+            The image tensor to train.
+        mask : TENSOR
+            The respective mask
+
+        '''
         
         img = self.img[index]
         mask = self.mask[index]

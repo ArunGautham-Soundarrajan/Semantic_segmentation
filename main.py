@@ -17,13 +17,15 @@ from torch.utils.data import DataLoader, random_split
 import argparse
 import math
 
-from customDataset import CustomDataset
+from customDataset import CustomDataset, SelfTrainingDataset
 from models import get_Unet, get_PSPNet, get_DeepLabv3_plus
 
-from plots import *
+from plots import loss_plot, mean_iou_plot, pixel_acc_plot
 from inference import inference
-from trainer import train
+from trainer import train, self_trainer
 from evaluation_metrics import count_parameters
+from prediction import prediction
+
             
 if __name__ == "__main__":
         
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     my_parser.add_argument('Model', 
                            metavar='model',
                            type = str,
-                           help = 'b: Baseline \t d: Deep Lab \t p: PSPNet'
+                           help = 'b: Baseline \t d: DeepLabv3+ \t p: PSPNet \t s: Self Training(Deeplabv3+)'
                            )
     
     my_parser.add_argument('Data', 
@@ -70,7 +72,7 @@ if __name__ == "__main__":
         
     
     #Trainging Params
-    BATCH_SIZE = 32
+    BATCH_SIZE = 16
     EPOCHS = 50
     IMG_SIZE = 128
     SEED = 29
@@ -114,6 +116,11 @@ if __name__ == "__main__":
         
         model = get_PSPNet(num_classes=NUM_CLASSES).to(device=DEVICE)
         model_name = 'PSPNet'
+        
+    elif model_to_train == 's':
+        
+        model = get_DeepLabv3_plus(num_classes=NUM_CLASSES).to(device=DEVICE)
+        model_name = 'Deep_lab_v3+' 
     
     #Data directory
     if data_to_use == 1:
@@ -149,34 +156,64 @@ if __name__ == "__main__":
     
     #optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr = LR)
+    st_optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
     
     #number of parameters
     print('\nNumber of trainable parameters :', count_parameters(model))
     
-    #train
-    trained_model, metrics = train(model, train_loader, test_loader,
+    
+    #Check if the model exists for self training
+    if (model_to_train != 's') and not os.path.exists(os.path.join('models', model_name + '.pth')):
+        
+        #train
+        model, metrics = train(model, train_loader, test_loader,
                                    criterion, optimizer, EPOCHS, NUM_CLASSES, DEVICE, model_name)
+        
+        total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test = metrics
     
-    total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test = metrics
+        #store metrics into a csv file
+        metrics_df = pd.DataFrame(total_loss, columns = ['Train_loss'])
+        metrics_df['val_loss'] = val_loss
+        metrics_df['Iou_train'] = meanioutrain
+        metrics_df['Iou_test'] = meanioutest
+        metrics_df['Pixel_acc_train'] = mean_pixacc_train
+        metrics_df['Pixel_acc_test'] = mean_pixacc_test
+        metrics_df.to_csv( os.path.join('metrics', model_name + '_.csv'), index = False)
+        
+        #loss plot
+        loss_plot(total_loss, val_loss, model_name + '_Loss')
+        
+        #mean iou plot
+        mean_iou_plot(EPOCHS, meanioutrain, meanioutest, model_name +'_Mean IoU')
+        
+        #mean pixel accuracy
+        pixel_acc_plot(EPOCHS, mean_pixacc_train, mean_pixacc_test, model_name +'_Mean Pixel Accuracy')
+        
+        
+    else:  
+        
+        #load the saved model
+        model.load_state_dict(torch.load(os.path.join('models', model_name + '.pth')))
     
-    #store metrics into a csv file
-    metrics_df = pd.DataFrame(total_loss, columns = ['Train_loss'])
-    metrics_df['val_loss'] = val_loss
-    metrics_df['Iou_train'] = meanioutrain
-    metrics_df['Iou_test'] = meanioutest
-    metrics_df['Pixel_acc_train'] = mean_pixacc_train
-    metrics_df['Pixel_acc_test'] = mean_pixacc_test
-    metrics_df.to_csv( os.path.join('metrics', model_name + '_.csv'), index = False)
-    
-    #loss plot
-    loss_plot(total_loss, val_loss, model_name + '_Loss')
-    
-    #mean iou plot
-    mean_iou_plot(EPOCHS, meanioutrain, meanioutest, model_name +'_Mean IoU')
-    
-    #mean pixel accuracy
-    pixel_acc_plot(EPOCHS, mean_pixacc_train, mean_pixacc_test, model_name +'_Mean Pixel Accuracy')
-    
+
     #inference    
-    #inference_time, iou, pix_acc = inference(trained_model, test_dataset)
+    #inference_time, iou, pix_acc = inference(model, test_dataset)
+    
+    
+    #Self training 
+    if model_to_train == 's':
+        
+        #Generate pseudo labels        
+        img_list, mask_list = prediction(model, test_dataset, criterion, NUM_CLASSES)
+        
+        #Create a dataset with pseduo labels and images
+        st_dataset = SelfTrainingDataset(img_list, mask_list)
+        
+        #load into dataloader
+        st_loader = DataLoader(dataset = st_dataset,
+                             batch_size= BATCH_SIZE)
+        
+        #train on it
+        st_model = self_trainer(model, st_loader, criterion, st_optimizer, 10, NUM_CLASSES, DEVICE, model_name)
+    
     

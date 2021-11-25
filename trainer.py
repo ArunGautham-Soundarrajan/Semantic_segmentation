@@ -31,6 +31,8 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_cl
         The number of Epochs to train for.
     num_classes : INT
         The number of classes.
+    DEVICE : STR
+        Cuda or cpu
     model_name : STR
         The name of model for saving it.
 
@@ -140,6 +142,33 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_cl
 
 
 def self_trainer(model, test_loader, criterion, optimizer, EPOCHS, num_classes, DEVICE, model_name):
+    '''
+    
+    Parameters
+    ----------
+    model : TYPE
+        Pytorch model to train.
+    test_loader : TYPE
+        Data loader for validation/testing set.
+    criterion : TYPE
+        Loss Function.
+    optimizer : TYPE
+        Optimizer of choice.
+    EPOCHS : INT
+        The number of Epochs to train for.
+    num_classes : INT
+        The number of classes.
+    DEVICE : STR
+        Cuda or cpu
+    model_name : STR
+        The name of model for saving it.
+
+    Returns
+    -------
+    model : TYPE
+        Trained model.
+
+    '''
     
     #list to store loss
     total_loss = []
