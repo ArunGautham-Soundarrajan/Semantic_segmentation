@@ -14,6 +14,7 @@ import torch.nn as nn
 import torchvision.transforms as T
 from torch.utils.data import DataLoader, random_split
 
+import albumentations as A
 import argparse
 import math
 
@@ -72,10 +73,10 @@ if __name__ == "__main__":
         
     
     #Trainging Params
-    BATCH_SIZE = 16
+    BATCH_SIZE = 12
     EPOCHS = 50
     IMG_SIZE = 128
-    SEED = 29
+    SEED = 99
     LR = 1e-3
     DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
     
@@ -90,9 +91,16 @@ if __name__ == "__main__":
     torch.manual_seed(SEED)
     
     #Preprocessing
-    transform = T.Compose([
-            T.Resize((IMG_SIZE,IMG_SIZE)),
+    train_transforms = A.Compose([
+            A.Resize(IMG_SIZE,IMG_SIZE),
+            #A.RandomSizedCrop(min_max_height=(20, 128), height=IMG_SIZE, width=IMG_SIZE, p=0.5),
+            #A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.6)            
             ])
+    
+    test_transforms = A.Compose([
+            A.Resize(IMG_SIZE,IMG_SIZE),
+            ])
+    
     
     #Number of classes
     if data_to_use == 1:
@@ -128,21 +136,25 @@ if __name__ == "__main__":
         model_name = model_name + '_ARID20'
         dataset = CustomDataset(img_dir = img_dir,
                                 pixel_map=False,
-                                transform=transform)
+                                )
         
     elif data_to_use == 2:
         img_dir = 'fat_data'
         model_name = model_name + '_FAT'
         dataset = CustomDataset(img_dir = img_dir,
                                 pixel_map=True,
-                                transform=transform)
+                                )
                 
     train_percent = math.floor(dataset.__len__()*0.9)
     test_percent = dataset.__len__() - train_percent
     
     #train test split 90:10
     train_dataset , test_dataset = random_split(dataset,( train_percent, test_percent))
-     
+    
+    #Data Augmentation
+    train_dataset.dataset.transform = train_transforms
+    test_dataset.dataset.transform = test_transforms
+    
     #DataLoader
     train_loader = DataLoader(dataset = train_dataset, 
                               batch_size= BATCH_SIZE, 
@@ -158,12 +170,22 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr = LR)
     st_optimizer = torch.optim.Adam(model.parameters(), lr = 1e-4)
     
-    #number of parameters
-    print('\nNumber of trainable parameters :', count_parameters(model))
+
+    
     
     
     #Check if the model exists for self training
-    if (model_to_train != 's') and not os.path.exists(os.path.join('models', model_name + '.pth')):
+    if ((model_to_train == 's') and os.path.exists(os.path.join('models', model_name + '.pth'))):
+        
+        
+        #load the saved model
+        model.load_state_dict(torch.load(os.path.join('models', model_name + '.pth')))
+        
+        
+    else:  
+        
+        #number of parameters
+        print('\nNumber of trainable parameters :', count_parameters(model))
         
         #train
         model, metrics = train(model, train_loader, test_loader,
@@ -189,29 +211,22 @@ if __name__ == "__main__":
         #mean pixel accuracy
         pixel_acc_plot(EPOCHS, mean_pixacc_train, mean_pixacc_test, model_name +'_Mean Pixel Accuracy')
         
-        
-    else:  
-        
-        #load the saved model
-        model.load_state_dict(torch.load(os.path.join('models', model_name + '.pth')))
-    
-
     #inference    
-    #inference_time, iou, pix_acc = inference(model, test_dataset)
+    #inference_time, iou, pix_acc = inference(model, test_dataset, NUM_CLASSES)
     
     
     #Self training 
     if model_to_train == 's':
         
         #Generate pseudo labels        
-        img_list, mask_list = prediction(model, test_dataset, criterion, NUM_CLASSES)
+        img_list, mask_list = prediction(model, test_dataset, NUM_CLASSES)
         
         #Create a dataset with pseduo labels and images
-        st_dataset = SelfTrainingDataset(img_list, mask_list)
+        st_dataset = SelfTrainingDataset(img_list, mask_list, train_transforms)
         
         #load into dataloader
         st_loader = DataLoader(dataset = st_dataset,
-                             batch_size= BATCH_SIZE)
+                               )
         
         #train on it
         st_model = self_trainer(model, st_loader, criterion, st_optimizer, 10, NUM_CLASSES, DEVICE, model_name)

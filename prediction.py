@@ -9,6 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torchvision.transforms as T
@@ -50,8 +51,9 @@ def prediction(model, test_dataset, NUM_CLASSES):
 
         #set the model to eval mode
         model.eval()
+        loop = tqdm(test_dataset, desc = 'making prediction')
         
-        for img, mask in test_dataset:
+        for img, mask in loop:
             
             if torch.cuda.is_available():
                 DEVICE = 'cuda'
@@ -60,17 +62,21 @@ def prediction(model, test_dataset, NUM_CLASSES):
         
             #Set to device
             img = img.to(device = DEVICE)
-            mask = mask.to(device = DEVICE)
+            mask = mask.to(device = DEVICE).unsqueeze(0)
         
             #pseudo label
             val_pred = model(img.unsqueeze(0))
             
             m_iou.append(meanIOU(mask, val_pred, NUM_CLASSES))
-            pixel_acc.append(pixelAcc(mask, val_pred))
+            pixel_acc.append(pixelAcc(mask, val_pred, NUM_CLASSES))
             
             #store img and pseudo labels
             img_list.append(img)
             mask_list.append(torch.argmax(val_pred, dim = 1))
+            
+            loop.set_postfix({'Mean IOU': np.mean(m_iou),
+                              'Pixel Acc': np.mean(pixel_acc),
+                              })
     
     print('Number of test images :', len(img_list))        
     print('\nMean IoU :', np.mean(m_iou))

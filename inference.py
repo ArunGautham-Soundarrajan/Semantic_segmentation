@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from evaluation_metrics import *
 from models import *
 
-def inference(model, dataset, store = False):
+def inference(model, dataset, num_classes, store = False):
     '''
     
 
@@ -74,8 +74,8 @@ def inference(model, dataset, store = False):
             timings.append(curr_time)
 
             #calculate metrics
-            iou.append(meanIOU(ground_truth, pred))
-            pix_acc.append(pixelAcc(ground_truth, pred))
+            iou.append(meanIOU(ground_truth, pred, num_classes))
+            pix_acc.append(pixelAcc(ground_truth, pred, num_classes))
               
             #Change the number of channels
             pred = torch.argmax(pred, dim = 1)

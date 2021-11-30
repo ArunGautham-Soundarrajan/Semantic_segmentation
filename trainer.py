@@ -49,7 +49,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_cl
     #list to store loss
     val_loss = []
     total_loss = []
-    
+    best_loss = 1000
     meanioutrain = []
     mean_pixacc_train = []
     
@@ -87,7 +87,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_cl
                         
             #evalutaion metrics
             iou_train.append(meanIOU(mask, y_pred, num_classes))
-            pixelacctrain.append(pixelAcc(mask, y_pred))
+            pixelacctrain.append(pixelAcc(mask, y_pred, num_classes))
             #mean_train_time.append(train_time) 
                        
             #display the loss
@@ -120,7 +120,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_cl
                 
                 #accuracy and iou
                 iou_test.append(meanIOU(mask, val_pred, num_classes))
-                pixelacctest.append(pixelAcc(mask, val_pred))
+                pixelacctest.append(pixelAcc(mask, val_pred, num_classes))
             
                 #display in tqdm
                 val_loop.set_postfix({'Epoch ': epoch+1,
@@ -134,8 +134,11 @@ def train(model, train_loader, test_loader, criterion, optimizer, EPOCHS, num_cl
             meanioutest.append(np.mean(iou_test))
             mean_pixacc_test.append(np.mean(pixelacctest))
             
-    torch.save(model.state_dict(), os.path.join('models' , (model_name +'.pth')))
-    
+        if total_loss[-1] < best_loss:        
+            torch.save(model.state_dict(), os.path.join('models' , (model_name +'.pth')))
+            best_loss = total_loss[-1]
+            
+            
     metrics = (total_loss, val_loss,  meanioutrain, mean_pixacc_train, meanioutest, mean_pixacc_test)
     
     return model, metrics
@@ -187,7 +190,7 @@ def self_trainer(model, test_loader, criterion, optimizer, EPOCHS, num_classes, 
         loop = tqdm(test_loader, desc = "Self Training Epoch")
         
         #training set
-        for b, (img, mask) in enumerate(loop):
+        for img, mask in loop:
             
             #change to device
             img = img.to(device = DEVICE)
@@ -204,7 +207,7 @@ def self_trainer(model, test_loader, criterion, optimizer, EPOCHS, num_classes, 
                         
             #evalutaion metrics
             iou_train.append(meanIOU(mask, y_pred, num_classes))
-            pixelacctrain.append(pixelAcc(mask, y_pred))
+            pixelacctrain.append(pixelAcc(mask, y_pred, num_classes))
             #mean_train_time.append(train_time) 
                        
             #display the loss

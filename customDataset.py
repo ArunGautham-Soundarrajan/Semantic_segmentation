@@ -11,7 +11,7 @@ import math
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms as T
-from PIL import Image
+import PIL.Image
 
 
 class CustomDataset(Dataset):
@@ -76,13 +76,16 @@ class CustomDataset(Dataset):
         image = os.path.join(self.img_dir, 'images', self.imgs[index])
         mask_path = os.path.join(self.img_dir, 'labels', self.masks[index])
         
-        img = Image.open(image).convert("RGB")
-        mask = Image.open(mask_path)
+        img = PIL.Image.open(image).convert("RGB")
+        img = np.array(img)
+        mask = PIL.Image.open(mask_path)
         mask = mask.convert('L')
-         
+        mask = np.array(mask)
+        
         if self.transform is not None:
-            img = self.transform(img)
-            mask = self.transform(mask)
+            transformed = self.transform(image=img, mask=mask)
+            img = transformed['image']
+            mask = transformed['mask']
                     
         mask = np.array(mask)
         mask = torch.from_numpy(mask)
@@ -106,7 +109,7 @@ class CustomDataset(Dataset):
 class SelfTrainingDataset(Dataset):
     
     
-    def __init__(self, img, mask):
+    def __init__(self, img, mask, transform = None):
         '''
         
 
@@ -116,7 +119,9 @@ class SelfTrainingDataset(Dataset):
             List of images.
         mask : LIST (img)
             List of pseudo labels.
-
+        transform : TYPE, optional
+            Pytorch Transformations to apply on the image. The default is None.
+            
         Returns
         -------
         None.
@@ -125,6 +130,7 @@ class SelfTrainingDataset(Dataset):
 
         self.img = img
         self.mask = mask
+        self.transform = transform
     
     def __len__(self):
         '''
@@ -160,4 +166,15 @@ class SelfTrainingDataset(Dataset):
         img = self.img[index]
         mask = self.mask[index]
         
-        return  img, mask.squeeze(0)
+        img = np.array(img.cpu()).reshape(128,128,3)
+        mask = np.array(mask.cpu()).reshape(128,128)
+        
+        if self.transform is not None:
+            transformed = self.transform(image=img, mask=mask)
+            img = transformed['image']
+            mask = transformed['mask']
+       
+        mask = torch.from_numpy(mask)
+        mask = mask.type(torch.LongTensor)
+        
+        return  T.ToTensor()(img), mask

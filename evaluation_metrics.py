@@ -40,34 +40,75 @@ def meanIOU(label, pred, num_classes):
         
     return output
 
+#Reference
+'''
 
-def pixelAcc(label, pred): 
-    '''
+This part of the code for calculating Mean Pixel Accuracy is taken from,
+#https://github.com/kevinzakka/pytorch-goodies/blob/master/metrics.py
+
+'''   
+
+EPS = 1e-10
+
+
+def nanmean(x):
     
-
-    Parameters
-    ----------
-    label : TENSOR
-        The ground truth.
-    pred : TENSOR
-        The predicted mask.
-
-    Returns
-    -------
-    accuracy : FLOAT
-        The mean Pixel Accuracy over all the classes.
-
-    '''
+    """
     
-    with torch.no_grad():
+    
+    Computes the arithmetic mean ignoring any NaNs.
+       
+    """
+    
+    return torch.mean(x[x == x])
+
+def _fast_hist(true, pred, num_classes):
+    
+    mask = (true >= 0) & (true < num_classes)
+    hist = torch.bincount(
+                        num_classes * true[mask] + pred[mask],
+                        minlength=num_classes ** 2,
+                        ).reshape(num_classes, num_classes).float()
+    
+    return hist
+
+def pixelAcc(label, pred, num_classes):
+    """
+    
+    
+    
+    Computes the average per-class pixel accuracy.
+    The per-class pixel accuracy is a more fine-grained
+    version of the overall pixel accuracy. A model could
+    score a relatively high overall pixel accuracy by
+    correctly predicting the dominant labels or areas
+    in the image whilst incorrectly predicting the
+    possibly more important/rare labels. Such a model
+    will score a low per-class pixel accuracy.
+    
+    Args:
+        hist: confusion matrix.
         
-        pred = torch.argmax(F.softmax(pred, dim=1), dim=1)
-        correct = torch.eq(pred, label).int()
+    Returns:
+        avg_per_class_acc: the average per-class pixel accuracy.
         
-        accuracy = float(correct.sum()) / float(correct.numel())
-    return accuracy
+    """
     
     
+    label = label
+    pred = torch.argmax(pred, dim = 1)
+    
+    hist = _fast_hist(label, pred, num_classes)
+    
+    correct_per_class = torch.diag(hist)
+    total_per_class = hist.sum(dim=1)
+    per_class_acc = correct_per_class / (total_per_class + EPS)
+    avg_per_class_acc = nanmean(per_class_acc)
+    
+    return avg_per_class_acc.cpu()
+
+#######
+   
 def count_parameters(model):
     '''
     
