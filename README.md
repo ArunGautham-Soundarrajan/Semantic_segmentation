@@ -44,12 +44,46 @@ python fat_data_processor.py
 
 # 🎈 Usage <a name = "usage"></a>
 
-**TBD**
+The models can trained using the command line interface. The arguments are passed after the name of main.py file.
+The arguments are passed in the order of model followed by dataset.
+
+```
+python main.py [model] [dataset]
+```
+
+To get help,
+
+```
+python main.py -h
+```
+
+Which will return a short description about the options for each arguments. The following are possible arguments that can be passed,
+
+```
+Model:
+b :U-Net Model (Baseline)
+d :DeepLab v3+
+p :PSP Net
+
+Data:
+1 :OCID subset (ARID20)
+2 :FAT subset.
+```
+
+Below the example for training a U-Net model on Falling things dataset,
+
+```
+python main.py b 2
+```
+  
+
 
 # ✍️ Authors <a name = "authors"></a>
 * [Arun Gautham Soundarrajan](https://github.com/ArunGautham-Soundarrajan)
 
 # 🎉 Acknowledgments <a name = "acknowledgement"></a>
+
+Project Supervisor : Dr. Gerardo Aragon Camarasa 
 
 OCID Dataset
 ```
