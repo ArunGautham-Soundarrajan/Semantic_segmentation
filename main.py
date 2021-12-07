@@ -18,14 +18,14 @@ import albumentations as A
 import argparse
 import math
 
-from customDataset import CustomDataset, SelfTrainingDataset
+from customDataset import CustomDataset
 from models import get_Unet, get_PSPNet, get_DeepLabv3_plus
 
 from plots import loss_plot, mean_iou_plot, pixel_acc_plot
 from inference import inference
-from trainer import train, self_trainer
+from trainer import train
 from evaluation_metrics import count_parameters
-from prediction import prediction
+
 
             
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     my_parser.add_argument('Model', 
                            metavar='model',
                            type = str,
-                           help = 'b: Baseline \t d: DeepLabv3+ \t p: PSPNet \t s: Self Training(Deeplabv3+)'
+                           help = 'b: Baseline \t d: DeepLabv3+ \t p: PSPNet'
                            )
     
     my_parser.add_argument('Data', 
@@ -175,12 +175,12 @@ if __name__ == "__main__":
     
     
     #Check if the model exists for self training
-    if ((model_to_train == 's') and os.path.exists(os.path.join('models', model_name + '.pth'))):
+    if os.path.exists(os.path.join('models', model_name + '.pth')):
         
-        
+        print('Trained Model already Exists, loading the model')
         #load the saved model
         model.load_state_dict(torch.load(os.path.join('models', model_name + '.pth')))
-        
+        print('Model successfully loaded')
         
     else:  
         
@@ -210,25 +210,10 @@ if __name__ == "__main__":
         
         #mean pixel accuracy
         pixel_acc_plot(EPOCHS, mean_pixacc_train, mean_pixacc_test, model_name +'_Mean Pixel Accuracy')
-        
+    
+    print('Inference test')    
     #inference    
-    #inference_time, iou, pix_acc = inference(model, test_dataset, NUM_CLASSES)
+    inference_time = inference(model, test_dataset, NUM_CLASSES)
     
-    
-    #Self training 
-    if model_to_train == 's':
-        
-        #Generate pseudo labels        
-        img_list, mask_list = prediction(model, test_dataset, NUM_CLASSES)
-        
-        #Create a dataset with pseduo labels and images
-        st_dataset = SelfTrainingDataset(img_list, mask_list, train_transforms)
-        
-        #load into dataloader
-        st_loader = DataLoader(dataset = st_dataset,
-                               )
-        
-        #train on it
-        st_model = self_trainer(model, st_loader, criterion, st_optimizer, 10, NUM_CLASSES, DEVICE, model_name)
-    
+    print('Mean Inference time (ms) :', np.mean(inference_time))
     

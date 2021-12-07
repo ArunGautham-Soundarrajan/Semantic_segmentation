@@ -8,6 +8,7 @@ Created on Tue Oct 12 13:08:40 2021
 import os
 import torch
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 from evaluation_metrics import *
 from models import *
 
@@ -36,13 +37,15 @@ def inference(model, dataset, num_classes, store = False):
     '''
     
     timings = []
-    iou = []
-    pix_acc = []
     counter = 0
     
+    #Inference timer
     starter, ender = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-       
-    for img, mask in dataset:       
+    
+    #Set the TQDM
+    loop = tqdm(dataset, desc= "Inference")
+    
+    for img, mask in loop:       
            
         with torch.no_grad():
             
@@ -72,10 +75,6 @@ def inference(model, dataset, num_classes, store = False):
             torch.cuda.synchronize()
             curr_time = starter.elapsed_time(ender)
             timings.append(curr_time)
-
-            #calculate metrics
-            iou.append(meanIOU(ground_truth, pred, num_classes))
-            pix_acc.append(pixelAcc(ground_truth, pred, num_classes))
               
             #Change the number of channels
             pred = torch.argmax(pred, dim = 1)
@@ -102,5 +101,9 @@ def inference(model, dataset, num_classes, store = False):
             
             counter +=1
             
-    return timings, iou, pix_acc
+        loop.set_postfix({
+                          'Time in ms': str(timings[-1]),
+                          })
+            
+    return timings
 
