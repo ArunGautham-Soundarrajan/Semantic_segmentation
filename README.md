@@ -25,10 +25,67 @@ The two datasets used in the project for training and evaluation are,
 * [OCID](https://www.acin.tuwien.ac.at/en/vision-for-robotics/software-tools/object-clutter-indoor-dataset/) (Object Clutter Indoor Dataset)
 * [FAT](http://research.nvidia.com/publication/2018-06_Falling-Things) (Falling Things Dataset)
 
-The dataset's can be downloaded from the given links.
+The dataset's can be downloaded from the given links and should be unizipped and placed in the main repository so a subset of it can be taken. 
+```
+📁 Semantic_segmentation/
+├─📁 OCID-dataset/
+│  ├─📁 OCID-dataset/
+│    ├─📁 ARID10/
+│    │ ├─📁 floor/
+│    │ └─📁 table/
+│    ├─📁 ARID20/
+│    │ ├─📁 floor/
+│    │ └─📁 table/
+│    └─📁 YCB10/
+│      ├─📁 floor/
+│      ├─📄 info.txt
+│      └─📁 table/
+├─📁 fat/
+│  ├─📁 fat/
+│    ├─📁 mixed/
+│    └─📁 single/
+```
+Make sure the unzipped data sits in the main repo with the following structure, so the subset can be taken automatically. Once the data is downloaded and placed like the above, the following `fat_data_processor.py` and `ocid_data_processor.py` can be run to process the data.
+
+Alternatively, the processed data used in this project can be downloaded directly and placed in the main repo using the links below.
+
 
 * ## Repo Structure
-
+This is how the repo should be and folders for plots, metrics, models etc., will be created automatically after the first run.
+This is just to make sure, the data is in the right repository
+```
+📁 Semantic_segmentation/
+├─📁 Data_OCID/
+│ ├─📁 images/
+│ │ └─📄 image.png 1066 file(s)
+│ └─📁 labels/
+│   └─📄 mask.png 1066 file(s)
+├─📁 fat_data/
+│ ├─📁 images/
+│ │ └─📄 image.jpg 4000 file(s)
+│ └─📁 labels/
+│   └─📄 mask.png 4000 file(s)
+├─📁 metrics/
+│ ├─📄 metrics.csv file(s)
+├─📁 models/
+│ ├─📄 models.pth file(s)
+├─📁 plots/
+│ ├─📄 loss.png file(s)
+├─📁 test_plots/
+│ ├─📄 inference.png file(s)
+├─📄 README.md
+├─📄 customDataset.py
+├─📄 evaluation_metrics.py
+├─📄 fat_data_processor.py
+├─📄 inference.py
+├─📄 main.py
+├─📄 models.py
+├─📄 ocid_data_processor.py
+├─📄 plots.py
+├─📄 prediction.py
+├─📄 requirements.txt
+└─📄 trainer.py
+```
 **TBD**
 
 * ## Preparing the data
