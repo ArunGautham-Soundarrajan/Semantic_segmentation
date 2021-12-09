@@ -140,36 +140,5 @@ python main.py b 2
 * [Arun Gautham Soundarrajan](https://github.com/ArunGautham-Soundarrajan)
 
 # 🎉 Acknowledgments <a name = "acknowledgement"></a>
-
-Project Supervisor : Dr. Gerardo Aragon Camarasa 
-
-OCID Dataset
-```
-@inproceedings{DBLP:conf/icra/SuchiPFV19,
-  author    = {Markus Suchi and
-               Timothy Patten and
-               David Fischinger and
-               Markus Vincze},
-  title     = {EasyLabel: {A} Semi-Automatic Pixel-wise Object Annotation Tool for
-               Creating Robotic {RGB-D} Datasets},
-  booktitle = {International Conference on Robotics and Automation, {ICRA} 2019,
-               Montreal, QC, Canada, May 20-24, 2019},
-  pages     = {6678--6684},
-  year      = {2019},
-  crossref  = {DBLP:conf/icra/2019},
-  url       = {https://doi.org/10.1109/ICRA.2019.8793917},
-  doi       = {10.1109/ICRA.2019.8793917},
-  timestamp = {Tue, 13 Aug 2019 20:25:20 +0200},
-  biburl    = {https://dblp.org/rec/bib/conf/icra/SuchiPFV19},
-  bibsource = {dblp computer science bibliography, https://dblp.org}
-}
-```
-FAT Dataset
-```
-@INPROCEEDINGS{tremblay2018arx:fat,
-  AUTHOR = "Jonathan Tremblay and Thang To and Stan Birchfield",
-  TITLE = "Falling Things: {A} Synthetic Dataset for {3D} Object Detection and Pose Estimation",
-  BOOKTITLE = "CVPR Workshop on Real World Challenges and New Benchmarks for Deep Learning in Robotic Vision",
-  MONTH = jun,
-  YEAR = 2018}
-```
+ 
+Project Supervisor : [Dr. Gerardo Aragon Camarasa](https://www.gla.ac.uk/schools/computing/staff/gerardoaragoncamarasa/) 
