@@ -48,6 +48,8 @@ The dataset's can be downloaded from the given links and should be unizipped and
 Make sure the unzipped data sits in the main repo with the following structure, so the subset can be taken automatically. Once the data is downloaded and placed like the above, the following `fat_data_processor.py` and `ocid_data_processor.py` can be run to process the data.
 
 Alternatively, the processed data used in this project can be downloaded directly and placed in the main repo using the links below.
+* [OCID](https://drive.google.com/drive/folders/16f2pH0Q1RXI7UkvLASOOcxdIZuVNO_P0?usp=sharing)
+* [FAT](https://drive.google.com/drive/folders/10syG9kxpvBw6_k4Psx0SEu0aFH8jv42O?usp=sharing)
 
 
 * ## Repo Structure
@@ -86,7 +88,6 @@ This is just to make sure, the data is in the right repository
 ├─📄 requirements.txt
 └─📄 trainer.py
 ```
-**TBD**
 
 * ## Preparing the data
 Once you unzipped both the data in the main directory as shown in the repo structure, you need to run these two scripts which would take the subset of the data to work with and create a seperate directory for them. In your terminal run these blocks to execute
