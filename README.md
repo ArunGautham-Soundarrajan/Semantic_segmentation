@@ -98,7 +98,10 @@ This might take a while to run, as it copies each image and their label. Once it
 ```
 python fat_data_processor.py
 ```
+* ## Pretrained Models
 
+These are pretrained models and the folder can be placed in the main repo.
+* [Pre-trained models](https://drive.google.com/drive/folders/14gaqN26VECiVGnDpsAlY-IBVWeRMkyr6?usp=sharing)
 
 # 🎈 Usage <a name = "usage"></a>
 
